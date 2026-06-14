@@ -11,6 +11,8 @@ contract TokenMarketplaceTest is Test {
     TokenMarketplace public tokenMarketplace;
     ERC20Mock public erc20Mock;
 
+     error TokenMarketplace_ZeroNumberOfTokens(uint256 numberOfTokens);
+
 
     function setUp() public {
         address owner = makeAddr("owner");
@@ -37,8 +39,18 @@ contract TokenMarketplaceTest is Test {
         assertEq(tokenBalanceOfBuyerAfter-tokenBalanceOfBuyerBefore, tokensToBuyFromMarketplace);
     }
 
+    function test_RevertsWhenNumberOfTokensToBuyFromMarkeplaceIsZero() public {
+        uint256 tokensToBuyFromMarketplace = 0;
+        address buyer = makeAddr("buyer");
+        vm.deal(buyer,10 ether);
+        vm.prank(buyer);
 
-    
+        vm.expectRevert(abi.encodeWithSelector(TokenMarketplace_ZeroNumberOfTokens.selector,tokensToBuyFromMarketplace));
+        tokenMarketplace.buyTokensFromMarketplace{value: 1 ether}(tokensToBuyFromMarketplace);
+    }
+
+
+
     
 
   
