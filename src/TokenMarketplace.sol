@@ -91,7 +91,7 @@ contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
         orderList.push(order);
     }
 
-    function getNumberOfCreatedOrders() public view onlyOwner returns (uint256) {
+    function getNumberOfCreatedOrders() public view returns (uint256) {
        
         return nextOrderId;
     }
