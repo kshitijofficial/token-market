@@ -20,27 +20,26 @@ contract TokenMarketplaceTest is Test {
     }
 
     function testBuyTokensFromMarketplace() public {
-        //ARRANGE 
         uint256 tokensToBuyFromMarketplace = 2;
         uint256 tokenPrice = tokenMarketplace.TOKEN_PRICE();
-        uint256 totalPriceToPayToBuyTokens = tokensToBuyFromMarketplace*tokenPrice;// 2 eth
-        uint256 tokenMarketplaceEthBalanceBefore = address(tokenMarketplace).balance;//0 Eth
+        uint256 totalPriceToPayToBuyTokens = tokensToBuyFromMarketplace*tokenPrice;
+        uint256 tokenMarketplaceEthBalanceBefore = address(tokenMarketplace).balance;
         address buyer = makeAddr("buyer");
-        // console.log(tokenMarketplaceEthBalanceBefore);
-        
-        //ACT
+        uint256 tokenBalanceOfBuyerBefore = erc20Mock.balanceOf(buyer);
+       
         vm.prank(buyer);
         vm.deal(buyer,10 ether);
         tokenMarketplace.buyTokensFromMarketplace{value: totalPriceToPayToBuyTokens}(tokensToBuyFromMarketplace);
-        uint256 tokenMarketplaceEthBalanceAfter = address(tokenMarketplace).balance;//2 ETH
-        // console.log(tokenMarketplaceEthBalanceAfter);
+        uint256 tokenMarketplaceEthBalanceAfter = address(tokenMarketplace).balance;
+        uint256 tokenBalanceOfBuyerAfter = erc20Mock.balanceOf(buyer);
 
-        
-        //ASSERT
         assertEq(tokenMarketplaceEthBalanceAfter-tokenMarketplaceEthBalanceBefore, totalPriceToPayToBuyTokens);
-        
+        assertEq(tokenBalanceOfBuyerAfter-tokenBalanceOfBuyerBefore, tokensToBuyFromMarketplace);
     }
-    //I will be back in 15 min
+
+
+    
+    
 
   
 }
