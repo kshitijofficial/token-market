@@ -28,6 +28,7 @@ contract SLVTokenMarketplaceInvariantTest is StdInvariant, Test {
         bytes4[] memory selectors = new bytes4[](2);
 
         selectors[0] = MarketplaceHandler.buyFromMarketplace.selector;
+        selectors[1] = MarketplaceHandler.createSellOrder.selector;
 
         targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
         targetContract(address(handler));
@@ -35,9 +36,14 @@ contract SLVTokenMarketplaceInvariantTest is StdInvariant, Test {
 
     function invariant_marketplaceTokenBalanceIsAccountedFor() public view {
         uint256 expectedBalance = 
-        INITIAL_MARKETPLACE_TOKENS - handler.marketplaceTokensBought();
+        INITIAL_MARKETPLACE_TOKENS - handler.marketplaceTokensBought() + handler.openOrderTokens();
         
         assertEq(token.balanceOf(address(marketplace)), expectedBalance);
-
     }
+
+
+    function invariant_marketplaceCanCoverOpenOrders() public view {    
+        assertGe(token.balanceOf(address(marketplace)), handler.openOrderTokens());
+    }
+
 }
