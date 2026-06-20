@@ -1,0 +1,43 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity =0.8.34;
+
+import {Test} from "forge-std/Test.sol";
+import {StdInvariant} from "forge-std/StdInvariant.sol";
+import {TokenMarketplace} from "../src/TokenMarketplace.sol";
+import {OrderInfo} from "../src/types/Trade.sol";
+import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
+
+import {MarketplaceHandler} from "./TokenMarketplaceHandler.t.sol";
+contract SLVTokenMarketplaceInvariantTest is StdInvariant, Test {
+    ERC20Mock token;
+    TokenMarketplace marketplace;
+    MarketplaceHandler handler;
+
+    address owner = makeAddr("owner");
+
+    uint256 constant INITIAL_MARKETPLACE_TOKENS = 1000;
+
+    function setUp() public {
+        token = new ERC20Mock();
+        marketplace = new TokenMarketplace(owner, address(token));
+
+        token.mint(address(marketplace), INITIAL_MARKETPLACE_TOKENS);
+
+        handler = new MarketplaceHandler(token, marketplace);
+
+        bytes4[] memory selectors = new bytes4[](2);
+
+        selectors[0] = MarketplaceHandler.buyFromMarketplace.selector;
+
+        targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
+        targetContract(address(handler));
+    }
+
+    function invariant_marketplaceTokenBalanceIsAccountedFor() public view {
+        uint256 expectedBalance = 
+        INITIAL_MARKETPLACE_TOKENS - handler.marketplaceTokensBought();
+        
+        assertEq(token.balanceOf(address(marketplace)), expectedBalance);
+
+    }
+}
