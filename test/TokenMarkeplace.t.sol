@@ -32,9 +32,11 @@ contract TokenMarketplaceTest is Test {
 
         vm.prank(buyer);
         vm.deal(buyer, 10 ether);
+
         tokenMarketplace.buyTokensFromMarketplace{
             value: totalPriceToPayToBuyTokens
         }(tokensToBuyFromMarketplace);
+        
         uint256 tokenMarketplaceEthBalanceAfter = address(tokenMarketplace)
             .balance;
         uint256 tokenBalanceOfBuyerAfter = erc20Mock.balanceOf(buyer);
@@ -97,4 +99,6 @@ contract TokenMarketplaceTest is Test {
             tokensToBuyFromMarketplace
         );
     }
+
+
 }

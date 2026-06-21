@@ -6,8 +6,11 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {OrderInfo} from "./types/Trade.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
+     using SafeERC20 for IERC20;
+
      uint256 public constant TOKEN_PRICE = 1 ether;
      uint256 private reseverdOrderedTokens; 
      IERC20 public slvToken;
@@ -58,7 +61,7 @@ contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
             revert TokenMarketplace_InsufficientTokenBalance(numberOfTokens,_getSlvTokenBalanceOfMarketPlace());
         }
         //from marketplace to the buyer address
-        slvToken.transfer(msg.sender, numberOfTokens);
+        slvToken.safeTransfer(msg.sender, numberOfTokens);
         emit buyTokens(msg.sender,numberOfTokens);
     }
 
@@ -86,7 +89,7 @@ contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
             });
         orders[nextOrderId] = order;
         nextOrderId++;
-        slvToken.transferFrom(msg.sender, address(this), numberOfTokensToSell);
+        slvToken.safeTransferFrom(msg.sender, address(this), numberOfTokensToSell);
         reseverdOrderedTokens+= numberOfTokensToSell;
         orderList.push(order);
     }
@@ -123,8 +126,8 @@ contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
             order.isActive = false;
         }
         //token transfer from contract to the buyer account
-        slvToken.transfer(msg.sender, numberOfTokensToBuy);
-        
+       slvToken.safeTransfer(msg.sender, numberOfTokensToBuy);
+  
         //transfe eth from contract to the seller account
         (bool success,) = order.seller.call{value: msg.value}("");
          if(!success){
@@ -143,7 +146,7 @@ contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
             //algorithm
             order.isActive = false;
             reseverdOrderedTokens-=order.numberOfTokensToSell;
-            slvToken.transfer(order.seller,order.numberOfTokensToSell);
+            slvToken.safeTransfer(order.seller,order.numberOfTokensToSell);
         }
 
     function getCreatedOrderById(uint256 orderId) external view returns (OrderInfo memory ) {
