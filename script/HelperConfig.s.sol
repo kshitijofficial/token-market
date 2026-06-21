@@ -21,6 +21,10 @@ contract HelperConfig is Script {
     NetworkConfig public localNetworkConfig;
     
 
+    function getConfig() public returns (NetworkConfig memory) {
+        return getConfigByChainId(block.chainid);
+    }
+
     function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
         if (chainId == ETH_SEPOLIA_CHAIN_ID) {
             return getEthConfig();
