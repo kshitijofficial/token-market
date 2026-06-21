@@ -53,7 +53,7 @@ contract MarketplaceHandler is Test {
 
         uint256 orderId = bound(orderSeed, 0, orderCount - 1);
 
-        Order memory order = marketplace.getCreatedOrderById(orderId);
+        OrderInfo memory order = marketplace.getCreatedOrderById(orderId);
 
         if (!order.isActive || order.numberOfTokensToSell == 0) return;
 
@@ -61,7 +61,24 @@ contract MarketplaceHandler is Test {
         
         vm.deal(buyer, amount * 1 ether);
         vm.prank(buyer);
-        marketplace.buyTokensFromSeller{value: amount * 1 ether}(orderId, amount);
+        marketplace.buyTokensFromSellOrderCreated{value: amount * 1 ether}(orderId, amount);
         openOrderTokens -= amount;
      }
+
+     function cancelSellOrder(uint256 orderSeed) public {
+        uint256 orderCount = marketplace.getNumberOfCreatedOrders();
+        if (orderCount == 0) return;
+
+        uint256 orderId = bound(orderSeed, 0, orderCount - 1);
+        OrderInfo memory order = marketplace.getCreatedOrderById(orderId);
+
+        if (!order.isActive || order.numberOfTokensToSell == 0) return;
+
+        vm.prank(seller);
+        marketplace.cancelSellOrder(orderId);
+
+        openOrderTokens -= order.numberOfTokensToSell;
+     }
+
+     
 }
