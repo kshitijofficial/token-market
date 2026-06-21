@@ -19,7 +19,7 @@ contract SLVTokenMarketplaceInvariantTest is StdInvariant, Test {
 
     function setUp() public {
         token = new ERC20Mock();
-        marketplace = new TokenMarketplace(owner, address(token));
+        marketplace = new TokenMarketplace(address(token),owner);
 
         token.mint(address(marketplace), INITIAL_MARKETPLACE_TOKENS);
 
