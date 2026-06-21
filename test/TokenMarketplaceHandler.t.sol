@@ -46,4 +46,22 @@ contract MarketplaceHandler is Test {
 
         openOrderTokens += amount;
     }
+
+     function buyFromSeller(uint256 orderSeed, uint256 amount) public {
+        uint256 orderCount = marketplace.getNumberOfCreatedOrders();
+        if (orderCount == 0) return;
+
+        uint256 orderId = bound(orderSeed, 0, orderCount - 1);
+
+        Order memory order = marketplace.getCreatedOrderById(orderId);
+
+        if (!order.isActive || order.numberOfTokensToSell == 0) return;
+
+        amount = bound(amount, 1, order.numberOfTokensToSell);
+        
+        vm.deal(buyer, amount * 1 ether);
+        vm.prank(buyer);
+        marketplace.buyTokensFromSeller{value: amount * 1 ether}(orderId, amount);
+        openOrderTokens -= amount;
+     }
 }

@@ -46,4 +46,11 @@ contract SLVTokenMarketplaceInvariantTest is StdInvariant, Test {
         assertGe(token.balanceOf(address(marketplace)), handler.openOrderTokens());
     }
 
+    function invariant_marketplaceEthBalanceOnlyFromDirectSales() public view {
+        assertEq(
+            address(marketplace).balance,
+            handler.marketplaceTokensBought() * 1 ether
+        );
+    }
+
 }
