@@ -24,10 +24,10 @@ contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
      error TokenMarketplace_ZeroNumberOfTokens(uint256 numberOfTokens);
      error TokenMarketplace_InsufficientEthPayment(uint256 expectedPayment,uint256 actualPayment);
      error TokenMarketplace_InsufficientTokenBalance(uint256 expectedToken,uint256 actualToken);
-     error TokenMarketplace_InsufficientBalance(uint256 actualTokens,uint256 expectedTokens);
+     error TokenMarketplace_InsufficientBalance(uint256 expectedTokens,uint256 actualTokens);
      error TokenMarketplace_InsufficientAllowance(uint256 allowedTokens,uint256 tokensToTransfer);
      error TokenMarketplace_OrderIsNotActive(uint256 orderId);
-     error TokenMarketplace_NotEnoughTokensInOrder(uint256 actualTokens,uint256 expectedTokens);
+     error TokenMarketplace_NotEnoughTokensInOrder(uint256 expectedTokens,uint256 actualTokens);
      error TokenMarketplace_EthTransferFailed();
      error TokenMarketplace_InvalidOrderId();
      error TokenMarketplace_UnauthorizedSeller(address caller,uint256 orderId);
@@ -58,7 +58,7 @@ contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
         _isNumberOfTokensZero(numberOfTokens);
         _checkEthPayment(numberOfTokens);
         if(_getSlvTokenBalanceOfMarketPlace()<numberOfTokens){
-            revert TokenMarketplace_InsufficientTokenBalance(numberOfTokens,_getSlvTokenBalanceOfMarketPlace());
+            revert TokenMarketplace_InsufficientTokenBalance(_getSlvTokenBalanceOfMarketPlace(),numberOfTokens);
         }
         //from marketplace to the buyer address
         slvToken.safeTransfer(msg.sender, numberOfTokens);

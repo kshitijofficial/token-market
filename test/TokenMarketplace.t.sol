@@ -8,19 +8,21 @@ import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import "forge-std/console.sol";
 
 contract TokenMarketplaceTest is Test {
+    uint256 constant DEFAULT_NUMBER_OF_MINTED_TOKENS = 1000;
     TokenMarketplace public tokenMarketplace;
     ERC20Mock public erc20Mock;
+
     address buyer = makeAddr("buyer");
 
 
     error TokenMarketplace_ZeroNumberOfTokens(uint256 numberOfTokens);
     error TokenMarketplace_InsufficientEthPayment(uint256 expectedPayment,uint256 actualPayment);
-
+    error TokenMarketplace_InsufficientTokenBalance(uint256 actualTokens,uint256 expectedTokens);
     function setUp() public {
         address owner = makeAddr("owner");
         erc20Mock = new ERC20Mock();
         tokenMarketplace = new TokenMarketplace(address(erc20Mock), owner);
-        erc20Mock.mint(address(tokenMarketplace), 1000);
+        erc20Mock.mint(address(tokenMarketplace), DEFAULT_NUMBER_OF_MINTED_TOKENS);
     }
 
     function testBuyTokensFromMarketplace() public {
@@ -118,6 +120,24 @@ contract TokenMarketplaceTest is Test {
         vm.prank(buyer);
         vm.expectRevert(
             abi.encodeWithSelector(TokenMarketplace_InsufficientEthPayment.selector, correctEthAmount, ethAmount)
+        );
+        tokenMarketplace.buyTokensFromMarketplace{value: ethAmount}(numberOfTokensToBuy);
+    }
+
+    function test_fuzz_buyTokensFromMarketplace_revertsWhenAmountExceedsInventory(
+        uint256 numberOfTokensToBuy
+    ) public {
+        numberOfTokensToBuy = bound(numberOfTokensToBuy, DEFAULT_NUMBER_OF_MINTED_TOKENS + 1, 10_000);
+        uint256 ethAmount = numberOfTokensToBuy * 1 ether;
+        vm.deal(buyer, ethAmount);
+
+        vm.prank(buyer);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenMarketplace_InsufficientTokenBalance.selector,
+                DEFAULT_NUMBER_OF_MINTED_TOKENS,
+                numberOfTokensToBuy
+            )
         );
         tokenMarketplace.buyTokensFromMarketplace{value: ethAmount}(numberOfTokensToBuy);
     }
