@@ -10,8 +10,11 @@ import "forge-std/console.sol";
 contract TokenMarketplaceTest is Test {
     TokenMarketplace public tokenMarketplace;
     ERC20Mock public erc20Mock;
+    address buyer = makeAddr("buyer");
+
 
     error TokenMarketplace_ZeroNumberOfTokens(uint256 numberOfTokens);
+    error TokenMarketplace_InsufficientEthPayment(uint256 expectedPayment,uint256 actualPayment);
 
     function setUp() public {
         address owner = makeAddr("owner");
@@ -27,7 +30,7 @@ contract TokenMarketplaceTest is Test {
             tokenPrice;
         uint256 tokenMarketplaceEthBalanceBefore = address(tokenMarketplace)
             .balance;
-        address buyer = makeAddr("buyer");
+        
         uint256 tokenBalanceOfBuyerBefore = erc20Mock.balanceOf(buyer);
 
         vm.prank(buyer);
@@ -53,7 +56,7 @@ contract TokenMarketplaceTest is Test {
 
     function test_RevertsWhenNumberOfTokensToBuyFromMarkeplaceIsZero() public {
         uint256 tokensToBuyFromMarketplace = 0;
-        address buyer = makeAddr("buyer");
+      
         vm.deal(buyer, 10 ether);
         vm.prank(buyer);
 
@@ -78,7 +81,7 @@ contract TokenMarketplaceTest is Test {
             tokenPrice;
         uint256 tokenMarketplaceEthBalanceBefore = address(tokenMarketplace)
             .balance;
-        address buyer = makeAddr("buyer");
+        
         uint256 tokenBalanceOfBuyerBefore = erc20Mock.balanceOf(buyer);
 
         vm.prank(buyer);
@@ -98,6 +101,25 @@ contract TokenMarketplaceTest is Test {
             tokenBalanceOfBuyerAfter - tokenBalanceOfBuyerBefore,
             tokensToBuyFromMarketplace
         );
+    }
+
+    function test_fuzz_buyTokensFromMarketplace_revertsWrongEth(
+        uint256 numberOfTokensToBuy,
+        uint256 ethAmount
+    ) public {
+        numberOfTokensToBuy = bound(numberOfTokensToBuy, 1, 1000);
+
+        uint256 correctEthAmount = numberOfTokensToBuy * 1 ether;
+
+        ethAmount = bound(ethAmount, 0, 10_000 ether);
+        vm.assume(ethAmount != correctEthAmount);
+
+        vm.deal(buyer, ethAmount);
+        vm.prank(buyer);
+        vm.expectRevert(
+            abi.encodeWithSelector(TokenMarketplace_InsufficientEthPayment.selector, correctEthAmount, ethAmount)
+        );
+        tokenMarketplace.buyTokensFromMarketplace{value: ethAmount}(numberOfTokensToBuy);
     }
 
 
