@@ -105,7 +105,8 @@ contract TokenMarketplace is Ownable,Pausable,ReentrancyGuard{
         }
     }
 
-    function buyTokensFromSellOrderCreated(uint256 orderId,uint256 numberOfTokensToBuy) external payable whenPaused{
+    function buyTokensFromSellOrderCreated(uint256 orderId,uint256 numberOfTokensToBuy) external payable whenNotPaused{
+
         _validateOrderId(orderId);
         _isNumberOfTokensZero(numberOfTokensToBuy);
         _checkEthPayment(numberOfTokensToBuy);

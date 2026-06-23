@@ -217,5 +217,33 @@ contract TokenMarketplaceTest is Test {
         tokenMarketplace.createSellOrder(numberOfTokensToSell);
     }
 
+    
+    function test_fuzz_buyTokenFromSeller(uint256 numberOfTokensToSell,uint256 numberOfTokensToApprove,uint256 numberOfTokensToMint,uint256 numberOfTokensToBuy) public {
+        numberOfTokensToMint = bound(numberOfTokensToMint, 1, 1000);
+        numberOfTokensToApprove = bound(numberOfTokensToApprove, 1, numberOfTokensToMint);
+        numberOfTokensToSell = bound(numberOfTokensToSell, 1, numberOfTokensToApprove);
+        numberOfTokensToBuy = bound(numberOfTokensToBuy,1,numberOfTokensToSell);
+        _mintSLVTokens(seller, numberOfTokensToMint);
+        _approveTokens(seller,address(tokenMarketplace),numberOfTokensToApprove);
+        vm.prank(seller);
+        tokenMarketplace.createSellOrder(numberOfTokensToSell);
+        uint256 orderId = tokenMarketplace.getNumberOfCreatedOrders() - 1;
+        uint256 ethAmount = numberOfTokensToBuy * 1 ether;
+        uint256 buyerTokenBeforeBalance = erc20Mock.balanceOf(buyer);
+
+        vm.deal(buyer, ethAmount);
+        vm.prank(buyer);
+        tokenMarketplace.buyTokensFromSellOrderCreated{value: ethAmount}(orderId, numberOfTokensToBuy);
+    
+        uint256 buyerTokenAfterBalance = erc20Mock.balanceOf(buyer);
+        OrderInfo memory order = tokenMarketplace.getCreatedOrderById(orderId);
+        assertEq(buyerTokenAfterBalance - buyerTokenBeforeBalance, numberOfTokensToBuy);
+        assertEq(order.numberOfTokensToSell, numberOfTokensToSell - numberOfTokensToBuy);
+        assertEq(order.isActive, numberOfTokensToBuy < numberOfTokensToSell);
+    }
+     
+
+    
+
 
 }
