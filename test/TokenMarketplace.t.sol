@@ -20,7 +20,8 @@ contract TokenMarketplaceTest is Test {
     error TokenMarketplace_ZeroNumberOfTokens(uint256 numberOfTokens);
     error TokenMarketplace_InsufficientEthPayment(uint256 expectedPayment,uint256 actualPayment);
     error TokenMarketplace_InsufficientTokenBalance(uint256 actualTokens,uint256 expectedTokens);
-    
+    error TokenMarketplace_InsufficientAllowance(uint256 allowedTokens,uint256 tokensToTransfer);
+
     function _mintSLVTokens(address addr, uint256 numberOfTokensToMint) internal {
         erc20Mock.mint(addr, numberOfTokensToMint);
     }
@@ -188,6 +189,28 @@ contract TokenMarketplaceTest is Test {
             abi.encodeWithSelector(
                 TokenMarketplace_InsufficientTokenBalance.selector,
                 numberOfTokensToMint,
+                numberOfTokensToSell
+            )
+        );
+        tokenMarketplace.createSellOrder(numberOfTokensToSell);
+    }
+
+    function test_fuzz_createSellOrder_revertsWhenSellAmountExceedsAllowance(
+        uint256 numberOfTokensToSell,
+        uint256 numberOfTokensToApprove,
+        uint256 numberOfTokensToMint
+    ) public {
+        numberOfTokensToMint = bound(numberOfTokensToMint, 1, 1000);
+        numberOfTokensToSell = bound(numberOfTokensToSell, 1, numberOfTokensToMint);
+        numberOfTokensToApprove = bound(numberOfTokensToApprove, 0, numberOfTokensToSell - 1);
+        _mintSLVTokens(seller, numberOfTokensToMint);
+        _approveTokens(seller,address(tokenMarketplace),numberOfTokensToApprove);
+
+        vm.prank(seller);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenMarketplace_InsufficientAllowance.selector,
+                numberOfTokensToApprove,
                 numberOfTokensToSell
             )
         );
