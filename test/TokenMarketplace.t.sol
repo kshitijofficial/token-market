@@ -3,6 +3,7 @@ pragma solidity =0.8.34;
 
 import {Test} from "forge-std/Test.sol";
 import {TokenMarketplace} from "../src/TokenMarketplace.sol";
+import {OrderInfo} from "../src/types/Trade.sol";
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import "forge-std/console.sol";
@@ -13,16 +14,28 @@ contract TokenMarketplaceTest is Test {
     ERC20Mock public erc20Mock;
 
     address buyer = makeAddr("buyer");
+    address seller = makeAddr("seller");
 
 
     error TokenMarketplace_ZeroNumberOfTokens(uint256 numberOfTokens);
     error TokenMarketplace_InsufficientEthPayment(uint256 expectedPayment,uint256 actualPayment);
     error TokenMarketplace_InsufficientTokenBalance(uint256 actualTokens,uint256 expectedTokens);
+    
+    function _mintSLVTokens(address addr, uint256 numberOfTokensToMint) internal {
+        erc20Mock.mint(addr, numberOfTokensToMint);
+    }
+
+   function _approveTokens(address tokenOwner,address spender,uint256 approvalAmount
+   ) internal{
+        vm.prank(tokenOwner);
+        erc20Mock.approve(spender, approvalAmount);
+    }
+
     function setUp() public {
         address owner = makeAddr("owner");
         erc20Mock = new ERC20Mock();
         tokenMarketplace = new TokenMarketplace(address(erc20Mock), owner);
-        erc20Mock.mint(address(tokenMarketplace), DEFAULT_NUMBER_OF_MINTED_TOKENS);
+        _mintSLVTokens(address(tokenMarketplace), DEFAULT_NUMBER_OF_MINTED_TOKENS);
     }
 
     function testBuyTokensFromMarketplace() public {
@@ -140,6 +153,26 @@ contract TokenMarketplaceTest is Test {
             )
         );
         tokenMarketplace.buyTokensFromMarketplace{value: ethAmount}(numberOfTokensToBuy);
+    }
+
+     function test_fuzz_createSellOrder(uint256 numberOfTokensToSell,uint256 numberOfTokensToApprove,uint256 numberOfTokensToMint) public {
+        numberOfTokensToMint = bound(numberOfTokensToMint, 1, 1000);
+        numberOfTokensToApprove = bound(numberOfTokensToApprove, 1, numberOfTokensToMint);
+        numberOfTokensToSell = bound(numberOfTokensToSell, 1, numberOfTokensToApprove);
+         _mintSLVTokens(seller, numberOfTokensToMint);
+         _approveTokens(seller,address(tokenMarketplace),numberOfTokensToApprove);
+
+        vm.prank(seller);
+        tokenMarketplace.createSellOrder(numberOfTokensToSell);
+
+        uint256 createdOrderId = tokenMarketplace.getNumberOfCreatedOrders() - 1;
+        OrderInfo memory order = tokenMarketplace.getCreatedOrderById(createdOrderId);
+        
+        assertEq(createdOrderId, order.orderId);
+        assertEq(seller, order.seller);
+        assertEq(true, order.isActive);
+        assertEq(numberOfTokensToSell, order.numberOfTokensToSell);
+        assertEq(erc20Mock.allowance(seller, address(tokenMarketplace)), numberOfTokensToApprove - numberOfTokensToSell);
     }
 
 
