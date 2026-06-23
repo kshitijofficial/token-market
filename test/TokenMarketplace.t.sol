@@ -175,5 +175,24 @@ contract TokenMarketplaceTest is Test {
         assertEq(erc20Mock.allowance(seller, address(tokenMarketplace)), numberOfTokensToApprove - numberOfTokensToSell);
     }
 
+    function test_fuzz_createSellOrder_revertsWhenSellAmountExceedsBalance(
+        uint256 numberOfTokensToSell,
+        uint256 numberOfTokensToMint
+    ) public {
+        numberOfTokensToMint = bound(numberOfTokensToMint, 0, 1000);
+        numberOfTokensToSell = bound(numberOfTokensToSell, numberOfTokensToMint + 1, 10_000);
+        _mintSLVTokens(seller, numberOfTokensToMint);
+
+        vm.prank(seller);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenMarketplace_InsufficientTokenBalance.selector,
+                numberOfTokensToMint,
+                numberOfTokensToSell
+            )
+        );
+        tokenMarketplace.createSellOrder(numberOfTokensToSell);
+    }
+
 
 }
