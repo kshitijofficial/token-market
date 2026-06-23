@@ -241,6 +241,35 @@ contract TokenMarketplaceTest is Test {
         assertEq(order.numberOfTokensToSell, numberOfTokensToSell - numberOfTokensToBuy);
         assertEq(order.isActive, numberOfTokensToBuy < numberOfTokensToSell);
     }
+
+    function test_fuzz_buyTokensFromSeller_revertsWrongEth(
+        uint256 numberOfTokensToSell,
+        uint256 numberOfTokensToApprove,
+        uint256 numberOfTokensToMint,
+        uint256 numberOfTokensToBuy,
+        uint256 ethAmount
+    ) public {
+        numberOfTokensToMint = bound(numberOfTokensToMint, 1, 1000);
+        numberOfTokensToApprove = bound(numberOfTokensToApprove, 1, numberOfTokensToMint);
+        numberOfTokensToSell = bound(numberOfTokensToSell, 1, numberOfTokensToApprove);
+        numberOfTokensToBuy = bound(numberOfTokensToBuy, 1, numberOfTokensToSell);
+        uint256 correctEthAmount = numberOfTokensToBuy * 1 ether;
+        ethAmount = bound(ethAmount, 0, 10_000 ether);
+        vm.assume(ethAmount != correctEthAmount);
+
+        _mintSLVTokens(seller, numberOfTokensToMint);
+        _approveTokens(seller,address(tokenMarketplace),numberOfTokensToApprove);
+        vm.prank(seller);
+        tokenMarketplace.createSellOrder(numberOfTokensToSell);
+        uint256 orderId = tokenMarketplace.getNumberOfCreatedOrders() - 1;
+        vm.deal(buyer, ethAmount);
+
+        vm.prank(buyer);
+        vm.expectRevert(
+            abi.encodeWithSelector(TokenMarketplace_InsufficientEthPayment.selector,correctEthAmount, ethAmount)
+        );
+        tokenMarketplace.buyTokensFromSellOrderCreated{value: ethAmount}(orderId, numberOfTokensToBuy);
+    }
      
 
     
