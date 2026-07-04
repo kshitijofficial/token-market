@@ -39,7 +39,7 @@ contract TokenMarketplaceTest is Test {
 
     function testBuyTokensFromMarketplace() public {
         uint256 tokensToBuyFromMarketplace = 2;
-        uint256 tokenPrice = tokenMarketplace.TOKEN_PRICE();
+        uint256 tokenPrice = tokenMarketplace.getTokenPrice();
         uint256 totalPriceToPayToBuyTokens = tokensToBuyFromMarketplace * tokenPrice;
         uint256 tokenMarketplaceEthBalanceBefore = address(tokenMarketplace).balance;
 
@@ -72,7 +72,7 @@ contract TokenMarketplaceTest is Test {
     function test_FuzzBuyTokensFromMarketplace(uint256 tokensToBuyFromMarketplace) public {
         // vm.assume(tokensToBuyFromMarketplace < 1000);
         tokensToBuyFromMarketplace = bound(tokensToBuyFromMarketplace, 1, 1000);
-        uint256 tokenPrice = tokenMarketplace.TOKEN_PRICE();
+        uint256 tokenPrice = tokenMarketplace.getTokenPrice();
         uint256 totalPriceToPayToBuyTokens = tokensToBuyFromMarketplace * tokenPrice;
         uint256 tokenMarketplaceEthBalanceBefore = address(tokenMarketplace).balance;
 
