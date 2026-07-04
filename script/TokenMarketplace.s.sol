@@ -11,11 +11,8 @@ contract TokenMarketplaceScript is Script {
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
 
         vm.startBroadcast();
-        TokenMarketplace tokenMarketplace =
-            new TokenMarketplace(config.initialOwner, config.slvToken);
+        TokenMarketplace tokenMarketplace = new TokenMarketplace(config.initialOwner, config.slvToken);
         vm.stopBroadcast();
     }
 }
-
-
 

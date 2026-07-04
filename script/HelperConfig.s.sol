@@ -12,14 +12,13 @@ contract HelperConfig is Script {
     uint256 public constant LOCAL_CHAIN_ID = 31337;
 
     address public constant DEFAULT_ANVIL_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    
+
     struct NetworkConfig {
         address initialOwner;
         address slvToken;
     }
 
     NetworkConfig public localNetworkConfig;
-    
 
     function getConfig() public returns (NetworkConfig memory) {
         return getConfigByChainId(block.chainid);
@@ -55,12 +54,9 @@ contract HelperConfig is Script {
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({
-            initialOwner: vm.envOr("INITIAL_OWNER", DEFAULT_ANVIL_ACCOUNT),
-            slvToken: address(slvToken)
+            initialOwner: vm.envOr("INITIAL_OWNER", DEFAULT_ANVIL_ACCOUNT), slvToken: address(slvToken)
         });
 
         return localNetworkConfig;
     }
-
-
 }

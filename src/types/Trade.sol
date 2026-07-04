@@ -2,7 +2,7 @@
 
 pragma solidity =0.8.34;
 
-struct OrderInfo{
+struct OrderInfo {
     uint256 orderId;
     address seller;
     uint256 numberOfTokensToSell;
