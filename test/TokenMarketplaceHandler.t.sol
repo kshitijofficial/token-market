@@ -62,7 +62,7 @@ contract MarketplaceHandler is Test {
 
         vm.deal(buyer, amount * 1 ether);
         vm.prank(buyer);
-        marketplace.buyTokensFromSellOrderCreated{value: amount * 1 ether}(orderId, amount);
+        marketplace.buyTokensFromSellOrder{value: amount * 1 ether}(orderId, amount);
         openOrderTokens -= amount;
     }
 

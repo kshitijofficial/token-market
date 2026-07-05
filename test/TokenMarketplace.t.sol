@@ -199,7 +199,7 @@ contract TokenMarketplaceTest is Test {
 
         vm.deal(buyer, ethAmount);
         vm.prank(buyer);
-        tokenMarketplace.buyTokensFromSellOrderCreated{value: ethAmount}(orderId, numberOfTokensToBuy);
+        tokenMarketplace.buyTokensFromSellOrder{value: ethAmount}(orderId, numberOfTokensToBuy);
 
         uint256 buyerTokenAfterBalance = erc20Mock.balanceOf(buyer);
         OrderInfo memory order = tokenMarketplace.getCreatedOrderById(orderId);
@@ -234,6 +234,6 @@ contract TokenMarketplaceTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(TokenMarketplace_InsufficientEthPayment.selector, correctEthAmount, ethAmount)
         );
-        tokenMarketplace.buyTokensFromSellOrderCreated{value: ethAmount}(orderId, numberOfTokensToBuy);
+        tokenMarketplace.buyTokensFromSellOrder{value: ethAmount}(orderId, numberOfTokensToBuy);
     }
 }

@@ -87,7 +87,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         if (allowance < numberOfTokens) revert TokenMarketplace_InsufficientAllowance(allowance, numberOfTokens);
     }
 
-    function buyTokensFromSellOrderCreated(uint256 orderId, uint256 numberOfTokensToBuy)
+    function buyTokensFromSellOrder(uint256 orderId, uint256 numberOfTokensToBuy)
         external
         payable
         whenNotPaused
@@ -102,10 +102,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         _revertIfOrderIsNotActive(order);
         _revertIfOrderHasNotEnoughTokens(order, numberOfTokensToBuy);
 
-        order.numberOfTokensToSell -= numberOfTokensToBuy;
-        reseverdOrderedTokens -= numberOfTokensToBuy;
-
-        if (order.numberOfTokensToSell == 0) order.isActive = false;
+        _updateOrderAfterPurchase(order,numberOfTokensToBuy);
 
         slvToken.safeTransfer(msg.sender, numberOfTokensToBuy);
         
@@ -123,6 +120,16 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
             revert TokenMarketplace_NotEnoughTokensInOrder(order.numberOfTokensToSell, numberOfTokensToBuy);
         }
     }
+
+   function _updateOrderAfterPurchase(OrderInfo storage order, uint256 numberOfTokensToBuy) internal {
+     uint256 remainingTokens = order.numberOfTokensToSell - numberOfTokensToBuy;
+
+    order.numberOfTokensToSell = remainingTokens;
+    reseverdOrderedTokens -= numberOfTokensToBuy;
+
+    if (remainingTokens == 0) order.isActive = false;
+   }
+
 
     function _sendEthToSeller(address seller, uint256 amount) internal {
         (bool success,) = seller.call{value: amount}("");
