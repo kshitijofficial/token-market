@@ -67,17 +67,9 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         _recordSellOrder(numberOfTokensToSell);
 
         nextOrderId++;
-        reseverdOrderedTokens += numberOfTokensToSell;
+        _increaseReservedOrderedTokens(numberOfTokensToSell);
 
         emit SellOrderCreated(orderId, msg.sender, numberOfTokensToSell);
-    }
-
-    function _recordSellOrder(uint256 numberOfTokensToSell) internal {
-        OrderInfo memory order = OrderInfo({
-            orderId: nextOrderId, seller: msg.sender, numberOfTokensToSell: numberOfTokensToSell, isActive: true
-        });
-
-        orders[nextOrderId] = order;
     }
 
     function _revertIfInsufficientSellerTokenBalance(uint256 numberOfTokens) internal view {
@@ -90,6 +82,18 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
     function _revertIfAllowanceNotEnough(uint256 numberOfTokens) internal view {
         uint256 allowance = slvToken.allowance(msg.sender, address(this));
         if (allowance < numberOfTokens) revert TokenMarketplace_InsufficientAllowance(allowance, numberOfTokens);
+    }
+
+    function _recordSellOrder(uint256 numberOfTokensToSell) internal {
+        OrderInfo memory order = OrderInfo({
+            orderId: nextOrderId, seller: msg.sender, numberOfTokensToSell: numberOfTokensToSell, isActive: true
+        });
+
+        orders[nextOrderId] = order;
+    }
+
+    function _increaseReservedOrderedTokens(uint256 numberOfTokens) internal {
+        reseverdOrderedTokens += numberOfTokens;
     }
 
     function buyTokensFromSellOrder(uint256 orderId, uint256 numberOfTokensToBuy)
@@ -107,10 +111,10 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         _revertIfOrderIsNotActive(order);
         _revertIfOrderHasNotEnoughTokens(order, numberOfTokensToBuy);
 
-        _updateOrderAfterPurchase(order,numberOfTokensToBuy);
+        _updateOrderAfterPurchase(order, numberOfTokensToBuy);
 
         slvToken.safeTransfer(msg.sender, numberOfTokensToBuy);
-        
+
         _sendEthToSeller(order.seller, msg.value);
 
         emit BuyTokensFromSellOrderCreated(orderId, msg.sender, order.seller, numberOfTokensToBuy);
@@ -126,15 +130,14 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         }
     }
 
-   function _updateOrderAfterPurchase(OrderInfo storage order, uint256 numberOfTokensToBuy) internal {
-     uint256 remainingTokens = order.numberOfTokensToSell - numberOfTokensToBuy;
+    function _updateOrderAfterPurchase(OrderInfo storage order, uint256 numberOfTokensToBuy) internal {
+        uint256 remainingTokens = order.numberOfTokensToSell - numberOfTokensToBuy;
 
-    order.numberOfTokensToSell = remainingTokens;
-    reseverdOrderedTokens -= numberOfTokensToBuy;
+        order.numberOfTokensToSell = remainingTokens;
+        _decreaseReservedOrderedTokens(numberOfTokensToBuy);
 
-    if (remainingTokens == 0) order.isActive = false;
-   }
-
+        if (remainingTokens == 0) order.isActive = false;
+    }
 
     function _sendEthToSeller(address seller, uint256 amount) internal {
         (bool success,) = seller.call{value: amount}("");
@@ -155,13 +158,12 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         _revertIfInvalidOrderId(orderId);
         OrderInfo storage order = orders[orderId];
 
-        if (order.seller != msg.sender) revert TokenMarketplace_UnauthorizedSeller(msg.sender, orderId);
+        _revertIfUnauthorizedSeller(order, orderId);
         _revertIfOrderIsNotActive(order);
 
         uint256 numberOfTokensToCancel = order.numberOfTokensToSell;
-        order.isActive = false;
-        order.numberOfTokensToSell = 0;
-        reseverdOrderedTokens -= numberOfTokensToCancel;
+        _recordSellOrderCancellation(order);
+        _decreaseReservedOrderedTokens(numberOfTokensToCancel);
 
         slvToken.safeTransfer(order.seller, numberOfTokensToCancel);
 
@@ -171,6 +173,19 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
     function _revertIfInvalidOrderId(uint256 orderId) internal view {
         uint256 totalNumberOfCreatedOrder = getNumberOfCreatedOrders();
         if (orderId >= totalNumberOfCreatedOrder) revert TokenMarketplace_InvalidOrderId();
+    }
+
+    function _revertIfUnauthorizedSeller(OrderInfo storage order, uint256 orderId) internal view {
+        if (order.seller != msg.sender) revert TokenMarketplace_UnauthorizedSeller(msg.sender, orderId);
+    }
+
+    function _recordSellOrderCancellation(OrderInfo storage order) internal {
+        order.isActive = false;
+        order.numberOfTokensToSell = 0;
+    }
+
+    function _decreaseReservedOrderedTokens(uint256 numberOfTokens) internal {
+        reseverdOrderedTokens -= numberOfTokens;
     }
 
     function pause() external onlyOwner {
