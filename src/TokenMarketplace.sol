@@ -63,16 +63,21 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
 
         slvToken.safeTransferFrom(msg.sender, address(this), numberOfTokensToSell);
 
+        uint256 orderId = nextOrderId;
+        _recordSellOrder(numberOfTokensToSell);
+
+        nextOrderId++;
+        reseverdOrderedTokens += numberOfTokensToSell;
+
+        emit SellOrderCreated(orderId, msg.sender, numberOfTokensToSell);
+    }
+
+    function _recordSellOrder(uint256 numberOfTokensToSell) internal {
         OrderInfo memory order = OrderInfo({
             orderId: nextOrderId, seller: msg.sender, numberOfTokensToSell: numberOfTokensToSell, isActive: true
         });
 
         orders[nextOrderId] = order;
-        nextOrderId++;
-
-        reseverdOrderedTokens += numberOfTokensToSell;
-
-        emit SellOrderCreated(order.orderId, msg.sender, numberOfTokensToSell);
     }
 
     function _revertIfInsufficientSellerTokenBalance(uint256 numberOfTokens) internal view {
