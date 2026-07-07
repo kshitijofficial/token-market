@@ -6,6 +6,7 @@ import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
 contract HelperConfig is Script {
     error HelperConfig__InvalidChainId(uint256 invalidChainId);
+    error HelperConfig__LocalNetworkConfigNotSet();
 
     uint256 public constant ETH_SEPOLIA_CHAIN_ID = 11155111;
     uint256 public constant ETH_MAINNET_CHAIN_ID = 1;
@@ -20,11 +21,11 @@ contract HelperConfig is Script {
 
     NetworkConfig public localNetworkConfig;
 
-    function getConfig() public returns (NetworkConfig memory) {
+    function getConfig() public view returns (NetworkConfig memory) {
         return getConfigByChainId(block.chainid);
     }
 
-    function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
+    function getConfigByChainId(uint256 chainId) public view returns (NetworkConfig memory) {
         if (chainId == ETH_SEPOLIA_CHAIN_ID) {
             return getEthConfig();
         }
@@ -34,7 +35,7 @@ contract HelperConfig is Script {
         }
 
         if (chainId == LOCAL_CHAIN_ID) {
-            return getOrCreateAnvilConfig();
+            return getAnvilConfig();
         }
 
         revert HelperConfig__InvalidChainId(chainId);
@@ -44,7 +45,7 @@ contract HelperConfig is Script {
         return NetworkConfig({initialOwner: vm.envAddress("INITIAL_OWNER"), slvToken: vm.envAddress("SLV_TOKEN")});
     }
 
-    function getOrCreateAnvilConfig() public returns (NetworkConfig memory) {
+    function setUpAnvilConfig() public returns (NetworkConfig memory) {
         if (localNetworkConfig.slvToken != address(0)) {
             return localNetworkConfig;
         }
@@ -56,6 +57,14 @@ contract HelperConfig is Script {
         localNetworkConfig = NetworkConfig({
             initialOwner: vm.envOr("INITIAL_OWNER", DEFAULT_ANVIL_ACCOUNT), slvToken: address(slvToken)
         });
+
+        return localNetworkConfig;
+    }
+
+    function getAnvilConfig() public view returns (NetworkConfig memory) {
+        if (localNetworkConfig.slvToken == address(0)) {
+            revert HelperConfig__LocalNetworkConfigNotSet();
+        }
 
         return localNetworkConfig;
     }
