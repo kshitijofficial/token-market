@@ -2,13 +2,13 @@
 pragma solidity =0.8.34;
 
 import {Test} from "forge-std/Test.sol";
-import {TokenMarketplace} from "../src/TokenMarketplace.sol";
-import {OrderInfo} from "../src/types/Trade.sol";
+import {TokenMarketplace} from "../../src/TokenMarketplace.sol";
+import {OrderInfo} from "../../src/types/Trade.sol";
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import "forge-std/console.sol";
 
-contract TokenMarketplaceTest is Test {
+contract TokenMarketplaceFuzzTest is Test {
     uint256 constant DEFAULT_NUMBER_OF_MINTED_TOKENS = 1000;
     TokenMarketplace public tokenMarketplace;
     ERC20Mock public erc20Mock;
@@ -35,38 +35,6 @@ contract TokenMarketplaceTest is Test {
         erc20Mock = new ERC20Mock();
         tokenMarketplace = new TokenMarketplace(address(erc20Mock), owner);
         _mintSLVTokens(address(tokenMarketplace), DEFAULT_NUMBER_OF_MINTED_TOKENS);
-    }
-
-    function testBuyTokensFromMarketplace() public {
-        uint256 tokensToBuyFromMarketplace = 2;
-        uint256 tokenPrice = tokenMarketplace.getTokenPrice();
-        uint256 totalPriceToPayToBuyTokens = tokensToBuyFromMarketplace * tokenPrice;
-        uint256 tokenMarketplaceEthBalanceBefore = address(tokenMarketplace).balance;
-
-        uint256 tokenBalanceOfBuyerBefore = erc20Mock.balanceOf(buyer);
-
-        vm.prank(buyer);
-        vm.deal(buyer, 10 ether);
-
-        tokenMarketplace.buyTokensFromMarketplace{value: totalPriceToPayToBuyTokens}(tokensToBuyFromMarketplace);
-
-        uint256 tokenMarketplaceEthBalanceAfter = address(tokenMarketplace).balance;
-        uint256 tokenBalanceOfBuyerAfter = erc20Mock.balanceOf(buyer);
-
-        assertEq(tokenMarketplaceEthBalanceAfter - tokenMarketplaceEthBalanceBefore, totalPriceToPayToBuyTokens);
-        assertEq(tokenBalanceOfBuyerAfter - tokenBalanceOfBuyerBefore, tokensToBuyFromMarketplace);
-    }
-
-    function test_RevertsWhenNumberOfTokensToBuyFromMarkeplaceIsZero() public {
-        uint256 tokensToBuyFromMarketplace = 0;
-
-        vm.deal(buyer, 10 ether);
-        vm.prank(buyer);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(TokenMarketplace_ZeroNumberOfTokens.selector, tokensToBuyFromMarketplace)
-        );
-        tokenMarketplace.buyTokensFromMarketplace{value: 1 ether}(tokensToBuyFromMarketplace);
     }
 
     function test_FuzzBuyTokensFromMarketplace(uint256 tokensToBuyFromMarketplace) public {
