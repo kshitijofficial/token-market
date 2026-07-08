@@ -68,4 +68,19 @@ contract TokenMarketplaceUnitTest is Test {
         );
         tokenMarketplace.buyTokensFromMarketplace{value: 1 ether}(tokensToBuyFromMarketplace);
     }
+
+
+    function testBuyTokensFromMarketplace_gas() public {
+        uint256 tokensToBuyFromMarketplace = 2;
+        uint256 tokenPrice = tokenMarketplace.getTokenPrice();
+        uint256 totalPriceToPayToBuyTokens = tokensToBuyFromMarketplace * tokenPrice;
+
+        vm.prank(buyer);
+        vm.deal(buyer, 10 ether);
+
+        tokenMarketplace.buyTokensFromMarketplace{value: totalPriceToPayToBuyTokens}(tokensToBuyFromMarketplace);
+
+        vm.snapshotGasLastCall("buy tokens from marketplace");
+    }
+
 }
