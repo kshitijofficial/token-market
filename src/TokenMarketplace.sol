@@ -31,7 +31,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
     error TokenMarketplace_UnauthorizedSeller(address caller, uint256 orderId);
     error TokenMarkeplace_InvalidOwner();
 
-    event buyTokens(address indexed buyer, uint256 indexed numberOfTokensBought);
+    event BuyTokens(address indexed buyer, uint256 indexed numberOfTokensBought);
     event SellOrderCreated(uint256 indexed orderId, address indexed seller, uint256 indexed numberOfTokensToSell);
     event SellOrderCancelled(uint256 indexed orderId, address indexed seller, uint256 indexed numberOfTokensCancelled);
     event BuyTokensFromSellOrderCreated(
@@ -124,7 +124,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
     }
 
     function _revertIfOrderIsNotActive(OrderInfo storage order) internal view {
-        if (order.isActive == false) revert TokenMarketplace_OrderIsNotActive(order.orderId);
+        if (!order.isActive) revert TokenMarketplace_OrderIsNotActive(order.orderId);
     }
 
     function _revertIfOrderHasNotEnoughTokens(OrderInfo storage order, uint256 numberOfTokensToBuy) internal view {
