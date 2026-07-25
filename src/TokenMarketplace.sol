@@ -50,6 +50,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         slvToken.safeTransfer(msg.sender, numberOfTokens);
         dummy = false;
 
+
         emit buyTokens(msg.sender, numberOfTokens);
     }
 
