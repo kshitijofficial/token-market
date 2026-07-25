@@ -18,6 +18,8 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
 
     mapping(uint256 => OrderInfo) private orders;
 
+    bool dummy = true;
+
     error TokenMarketplace_ZeroNumberOfTokens(uint256 numberOfTokens);
     error TokenMarketplace_InsufficientEthPayment(uint256 expectedPayment, uint256 actualPayment);
     error TokenMarketplace_InsufficientTokenBalance(uint256 expectedToken, uint256 actualToken);
@@ -46,6 +48,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         _revertIfTokenBalanceOfMarketplaceIsLow(numberOfTokens);
 
         slvToken.safeTransfer(msg.sender, numberOfTokens);
+        dummy = false;
 
         emit buyTokens(msg.sender, numberOfTokens);
     }
