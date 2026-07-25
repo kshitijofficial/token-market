@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.34;
-
 import {Test} from "forge-std/Test.sol";
 import {TokenMarketplace} from "../../src/TokenMarketplace.sol";
-import {OrderInfo} from "../../src/types/Trade.sol";
-
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import "forge-std/console.sol";
 
 contract TokenMarketplaceUnitTest is Test {
     uint256 constant DEFAULT_NUMBER_OF_MINTED_TOKENS = 1000;
@@ -21,7 +17,7 @@ contract TokenMarketplaceUnitTest is Test {
     error TokenMarketplace_InsufficientTokenBalance(uint256 actualTokens, uint256 expectedTokens);
     error TokenMarketplace_InsufficientAllowance(uint256 allowedTokens, uint256 tokensToTransfer);
 
-    function _mintSLVTokens(address addr, uint256 numberOfTokensToMint) internal {
+    function _mintSlvTokens(address addr, uint256 numberOfTokensToMint) internal {
         erc20Mock.mint(addr, numberOfTokensToMint);
     }
 
@@ -34,7 +30,7 @@ contract TokenMarketplaceUnitTest is Test {
         address owner = makeAddr("owner");
         erc20Mock = new ERC20Mock();
         tokenMarketplace = new TokenMarketplace(address(erc20Mock), owner);
-        _mintSLVTokens(address(tokenMarketplace), DEFAULT_NUMBER_OF_MINTED_TOKENS);
+        _mintSlvTokens(address(tokenMarketplace), DEFAULT_NUMBER_OF_MINTED_TOKENS);
     }
 
     function testBuyTokensFromMarketplace() public {

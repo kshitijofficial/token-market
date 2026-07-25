@@ -12,7 +12,7 @@ contract TokenMarketplaceScript is Script {
             block.chainid == helperConfig.LOCAL_CHAIN_ID() ? helperConfig.setUpAnvilConfig() : helperConfig.getConfig();
 
         vm.startBroadcast();
-        TokenMarketplace tokenMarketplace = new TokenMarketplace(config.slvToken, config.initialOwner);
+        new TokenMarketplace(config.slvToken, config.initialOwner);
         vm.stopBroadcast();
     }
 }

@@ -10,7 +10,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    IERC20 immutable slvToken;
+    IERC20 immutable SLV_TOKEN;
 
     uint256 private constant TOKEN_PRICE = 1 ether;
     uint256 private reseverdOrderedTokens;
@@ -39,7 +39,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
     );
 
     constructor(address _slvToken, address _owner) Ownable(_owner) {
-        slvToken = IERC20(_slvToken);
+        SLV_TOKEN = IERC20(_slvToken);
     }
 
     function buyTokensFromMarketplace(uint256 numberOfTokens) external payable whenNotPaused nonReentrant {
@@ -47,15 +47,15 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         _revertIfIncorrectEthPayment(numberOfTokens);
         _revertIfTokenBalanceOfMarketplaceIsLow(numberOfTokens);
 
-        slvToken.safeTransfer(msg.sender, numberOfTokens);
+        SLV_TOKEN.safeTransfer(msg.sender, numberOfTokens);
         dummy = false;
 
-        emit buyTokens(msg.sender, numberOfTokens);
+        emit BuyTokens(msg.sender, numberOfTokens);
     }
 
     function _revertIfTokenBalanceOfMarketplaceIsLow(uint256 numberOfTokens) internal view {
-        if (slvToken.balanceOf(address(this)) < numberOfTokens) {
-            revert TokenMarketplace_InsufficientTokenBalance(slvToken.balanceOf(address(this)), numberOfTokens);
+        if (SLV_TOKEN.balanceOf(address(this)) < numberOfTokens) {
+            revert TokenMarketplace_InsufficientTokenBalance(SLV_TOKEN.balanceOf(address(this)), numberOfTokens);
         }
     }
 
@@ -64,7 +64,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         _revertIfInsufficientSellerTokenBalance(numberOfTokensToSell);
         _revertIfAllowanceNotEnough(numberOfTokensToSell);
 
-        slvToken.safeTransferFrom(msg.sender, address(this), numberOfTokensToSell);
+        SLV_TOKEN.safeTransferFrom(msg.sender, address(this), numberOfTokensToSell);
 
         uint256 orderId = nextOrderId;
         _recordSellOrder(numberOfTokensToSell);
@@ -76,14 +76,14 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
     }
 
     function _revertIfInsufficientSellerTokenBalance(uint256 numberOfTokens) internal view {
-        uint256 tokenBalance = slvToken.balanceOf(msg.sender);
+        uint256 tokenBalance = SLV_TOKEN.balanceOf(msg.sender);
         if (numberOfTokens > tokenBalance) {
             revert TokenMarketplace_InsufficientTokenBalance(tokenBalance, numberOfTokens);
         }
     }
 
     function _revertIfAllowanceNotEnough(uint256 numberOfTokens) internal view {
-        uint256 allowance = slvToken.allowance(msg.sender, address(this));
+        uint256 allowance = SLV_TOKEN.allowance(msg.sender, address(this));
         if (allowance < numberOfTokens) revert TokenMarketplace_InsufficientAllowance(allowance, numberOfTokens);
     }
 
@@ -116,7 +116,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
 
         _updateOrderAfterPurchase(order, numberOfTokensToBuy);
 
-        slvToken.safeTransfer(msg.sender, numberOfTokensToBuy);
+        SLV_TOKEN.safeTransfer(msg.sender, numberOfTokensToBuy);
 
         _sendEthToSeller(order.seller, msg.value);
 
@@ -168,7 +168,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
         _recordSellOrderCancellation(order);
         _decreaseReservedOrderedTokens(numberOfTokensToCancel);
 
-        slvToken.safeTransfer(order.seller, numberOfTokensToCancel);
+        SLV_TOKEN.safeTransfer(order.seller, numberOfTokensToCancel);
 
         emit SellOrderCancelled(orderId, msg.sender, numberOfTokensToCancel);
     }
@@ -200,7 +200,7 @@ contract TokenMarketplace is Ownable, Pausable, ReentrancyGuard {
     }
 
     function getAvailableMarketplaceTokens() external view returns (uint256) {
-        return slvToken.balanceOf(address(this));
+        return SLV_TOKEN.balanceOf(address(this));
     }
 
     function getNumberOfCreatedOrders() public view returns (uint256) {

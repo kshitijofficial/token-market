@@ -6,7 +6,7 @@ import {TokenMarketplace} from "../../src/TokenMarketplace.sol";
 import {OrderInfo} from "../../src/types/Trade.sol";
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import "forge-std/console.sol";
+
 
 contract TokenMarketplaceFuzzTest is Test {
     uint256 constant DEFAULT_NUMBER_OF_MINTED_TOKENS = 1000;
@@ -21,7 +21,7 @@ contract TokenMarketplaceFuzzTest is Test {
     error TokenMarketplace_InsufficientTokenBalance(uint256 actualTokens, uint256 expectedTokens);
     error TokenMarketplace_InsufficientAllowance(uint256 allowedTokens, uint256 tokensToTransfer);
 
-    function _mintSLVTokens(address addr, uint256 numberOfTokensToMint) internal {
+    function _mintSlvTokens(address addr, uint256 numberOfTokensToMint) internal {
         erc20Mock.mint(addr, numberOfTokensToMint);
     }
 
@@ -34,7 +34,7 @@ contract TokenMarketplaceFuzzTest is Test {
         address owner = makeAddr("owner");
         erc20Mock = new ERC20Mock();
         tokenMarketplace = new TokenMarketplace(address(erc20Mock), owner);
-        _mintSLVTokens(address(tokenMarketplace), DEFAULT_NUMBER_OF_MINTED_TOKENS);
+        _mintSlvTokens(address(tokenMarketplace), DEFAULT_NUMBER_OF_MINTED_TOKENS);
     }
 
     function test_FuzzBuyTokensFromMarketplace(uint256 tokensToBuyFromMarketplace) public {
@@ -94,7 +94,7 @@ contract TokenMarketplaceFuzzTest is Test {
         numberOfTokensToMint = bound(numberOfTokensToMint, 1, 1000);
         numberOfTokensToApprove = bound(numberOfTokensToApprove, 1, numberOfTokensToMint);
         numberOfTokensToSell = bound(numberOfTokensToSell, 1, numberOfTokensToApprove);
-        _mintSLVTokens(seller, numberOfTokensToMint);
+        _mintSlvTokens(seller, numberOfTokensToMint);
         _approveTokens(seller, address(tokenMarketplace), numberOfTokensToApprove);
 
         vm.prank(seller);
@@ -116,7 +116,7 @@ contract TokenMarketplaceFuzzTest is Test {
     ) public {
         numberOfTokensToMint = bound(numberOfTokensToMint, 0, 1000);
         numberOfTokensToSell = bound(numberOfTokensToSell, numberOfTokensToMint + 1, 10_000);
-        _mintSLVTokens(seller, numberOfTokensToMint);
+        _mintSlvTokens(seller, numberOfTokensToMint);
 
         vm.prank(seller);
         vm.expectRevert(
@@ -135,7 +135,7 @@ contract TokenMarketplaceFuzzTest is Test {
         numberOfTokensToMint = bound(numberOfTokensToMint, 1, 1000);
         numberOfTokensToSell = bound(numberOfTokensToSell, 1, numberOfTokensToMint);
         numberOfTokensToApprove = bound(numberOfTokensToApprove, 0, numberOfTokensToSell - 1);
-        _mintSLVTokens(seller, numberOfTokensToMint);
+        _mintSlvTokens(seller, numberOfTokensToMint);
         _approveTokens(seller, address(tokenMarketplace), numberOfTokensToApprove);
 
         vm.prank(seller);
@@ -157,7 +157,7 @@ contract TokenMarketplaceFuzzTest is Test {
         numberOfTokensToApprove = bound(numberOfTokensToApprove, 1, numberOfTokensToMint);
         numberOfTokensToSell = bound(numberOfTokensToSell, 1, numberOfTokensToApprove);
         numberOfTokensToBuy = bound(numberOfTokensToBuy, 1, numberOfTokensToSell);
-        _mintSLVTokens(seller, numberOfTokensToMint);
+        _mintSlvTokens(seller, numberOfTokensToMint);
         _approveTokens(seller, address(tokenMarketplace), numberOfTokensToApprove);
         vm.prank(seller);
         tokenMarketplace.createSellOrder(numberOfTokensToSell);
@@ -191,7 +191,7 @@ contract TokenMarketplaceFuzzTest is Test {
         ethAmount = bound(ethAmount, 0, 10_000 ether);
         vm.assume(ethAmount != correctEthAmount);
 
-        _mintSLVTokens(seller, numberOfTokensToMint);
+        _mintSlvTokens(seller, numberOfTokensToMint);
         _approveTokens(seller, address(tokenMarketplace), numberOfTokensToApprove);
         vm.prank(seller);
         tokenMarketplace.createSellOrder(numberOfTokensToSell);
