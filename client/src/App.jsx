@@ -39,6 +39,20 @@ function App() {
     getTokenPriceInEth();
   }, [contract]);
 
+  useEffect(() => {
+    async function getAvailableMarketplaceTokens() {
+      if (!contract) return;
+      try {
+        const availableTokens = await contract.getAvailableMarketplaceTokens();
+        console.log("Available Tokens:", availableTokens);
+      } catch (error) {
+        console.error(error);
+        alert(error);
+      }
+    }
+    getAvailableMarketplaceTokens();
+  }, [contract]);
+
   async function buyTokensFromMarketplace(e) {
     e.preventDefault();
     if (!contract || tokenPriceWei === 0n) return;
@@ -46,7 +60,9 @@ function App() {
     try {
       const numberOfTokens = BigInt(inputTokenRef.current.value);
       const amount = numberOfTokens * tokenPriceWei;
-      const tx = await contract.buyTokensFromMarketplace(numberOfTokens, { value: amount });
+      const tx = await contract.buyTokensFromMarketplace(numberOfTokens, {
+        value: amount,
+      });
       await tx.wait();
       alert("Tx Successful");
     } catch (error) {
